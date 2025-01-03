@@ -1,307 +1,264 @@
-# Entwickler-Dokumentation
+# InnovateOS Klipper Installer - Developer Guide
 
-## 🏗️ Architektur
+## Project Structure
 
-### Backend-Komponenten
-
-#### 1. FastAPI Server (`main.py`)
-- REST-API-Endpunkte
-- WebSocket-Verbindungen
-- CORS-Konfiguration
-- Statische Dateien
-
-#### 2. Installer (`installer.py`)
-- Klipper-Installation
-- Firmware-Kompilierung
-- Board-Flashen
-- Systemd-Service-Konfiguration
-
-#### 3. Board-Detektor (`board_detector.py`)
-- USB-Geräteerkennung
-- Serielle Port-Erkennung
-- DFU-Modus-Erkennung
-- Board-Identifikation
-
-#### 4. WebSocket-Manager (`websocket_manager.py`)
-- Verbindungsverwaltung
-- Status-Updates
-- Fehlerbehandlung
-- Logging
-
-### Frontend-Komponenten
-
-#### 1. Vue.js App (`App.vue`)
-- Installationsschritte
-- Board-Konfiguration
-- WebSocket-Client
-- Fortschrittsanzeige
-
-#### 2. Komponenten
-- `BoardSelector.vue`
-- `ConfigEditor.vue`
-- `InstallProgress.vue`
-- `ErrorDisplay.vue`
-
-## 🔄 Datenfluss
-
-### Installation
-```mermaid
-sequenceDiagram
-    Frontend->>+Backend: POST /api/install
-    Backend->>+WebSocket: connect
-    Backend->>+Installer: install_klipper()
-    Installer->>Installer: check_dependencies()
-    Installer->>WebSocket: status_update
-    Installer->>Installer: compile_firmware()
-    Installer->>WebSocket: status_update
-    Installer->>Installer: flash_firmware()
-    Installer->>WebSocket: status_update
-    Installer-->>-Backend: success
-    Backend-->>-Frontend: installation_complete
+```
+klipper-installer/
+├── backend/
+│   ├── app/
+│   │   ├── routers/       # API endpoints
+│   │   ├── services/      # Business logic
+│   │   ├── models/        # Data models
+│   │   └── utils/         # Helper functions
+│   ├── tests/             # Backend tests
+│   └── requirements.txt   # Python dependencies
+├── frontend/
+│   ├── src/
+│   │   ├── components/    # Vue components
+│   │   ├── views/         # Page components
+│   │   ├── store/         # Pinia stores
+│   │   ├── router/        # Vue Router config
+│   │   └── services/      # API clients
+│   ├── tests/             # Frontend tests
+│   └── package.json       # Node.js dependencies
+└── docs/                  # Documentation
 ```
 
-## 🧪 Testing
+## Development Setup
 
-### Backend-Tests
+### Prerequisites
 
-#### Unit-Tests
+1. Install development tools:
 ```bash
-# Tests ausführen
-pytest tests/
+# Python tools
+pip install black isort mypy pytest
 
-# Coverage-Report erstellen
-pytest --cov=app tests/
+# Node.js tools
+npm install -g @vue/cli typescript
 ```
 
-Wichtige Test-Dateien:
-- `test_installer.py`
-- `test_board_detector.py`
-- `test_websocket.py`
-
-#### Integration-Tests
-```bash
-# Integration-Tests
-pytest tests/integration/
-
-# E2E-Tests
-pytest tests/e2e/
+2. Configure IDE (VSCode recommended):
+```json
+{
+  "editor.formatOnSave": true,
+  "python.formatting.provider": "black",
+  "python.linting.enabled": true,
+  "python.linting.mypyEnabled": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "vetur.format.defaultFormatter.html": "prettier"
+}
 ```
 
-### Frontend-Tests
+### Development Workflow
 
-#### Unit-Tests
+1. Create a feature branch:
 ```bash
-# Tests ausführen
+git checkout -b feature/your-feature
+```
+
+2. Run tests during development:
+```bash
+# Backend tests
+cd backend
+pytest -v --cov=app
+
+# Frontend tests
+cd frontend
 npm run test:unit
-
-# Coverage-Report
-npm run test:coverage
 ```
 
-Test-Dateien:
-- `App.spec.ts`
-- `BoardSelector.spec.ts`
-- `WebSocket.spec.ts`
-
-#### E2E-Tests
-```bash
-# Cypress Tests
-npm run test:e2e
-
-# Mit UI
-npm run test:e2e:open
-```
-
-## 📝 Code-Style
-
-### Python
-- Black für Formatierung
-- Flake8 für Linting
-- MyPy für Type-Checking
-
-```bash
-# Formatierung
-black .
-
-# Linting
-flake8 .
-
-# Type-Checking
-mypy .
-```
-
-### TypeScript/Vue
-- ESLint für Linting
-- Prettier für Formatierung
-
-```bash
-# Linting
-npm run lint
-
-# Formatierung
-npm run format
-```
-
-## 🔧 Development Setup
-
-### 1. Backend
-```bash
-# Virtual Environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Dependencies
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
-
-# Development Server
-uvicorn main:app --reload
-```
-
-### 2. Frontend
-```bash
-# Dependencies
-npm install
-
-# Development Server
-npm run serve
-
-# Production Build
-npm run build
-```
-
-## 📦 Deployment
-
-### 1. Docker
-```bash
-# Build
-docker build -t innovateos-klipper .
-
-# Run
-docker run -p 8000:8000 innovateos-klipper
-```
-
-### 2. Manual
+3. Format code before committing:
 ```bash
 # Backend
-gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker
+black app tests
+isort app tests
 
 # Frontend
-nginx -c nginx.conf
+npm run lint
 ```
 
-## 🔒 Security
+4. Create pull request with:
+   - Clear description of changes
+   - Test coverage
+   - Documentation updates
+   - Migration steps if needed
 
-### 1. API Security
-- Rate Limiting
-- CORS-Konfiguration
-- Input Validation
+## Architecture
 
-### 2. WebSocket Security
-- Connection Limits
-- Message Validation
-- Heartbeat Checks
+### Backend
 
-### 3. File Security
-- Path Traversal Prevention
-- File Type Validation
-- Size Limits
+1. **FastAPI Application**
+   - Modular router structure
+   - Dependency injection
+   - Pydantic models for validation
+   - Async/await for I/O operations
 
-## 📚 Dokumentation
+2. **WebSocket Service**
+   ```python
+   class WebSocketManager:
+       async def connect(self, websocket: WebSocket):
+           await websocket.accept()
+           self.active_connections.append(websocket)
 
-### 1. API-Dokumentation
-- OpenAPI/Swagger
-- Endpoint-Beschreibungen
-- Beispiel-Requests
+       async def broadcast(self, message: dict):
+           for connection in self.active_connections:
+               await connection.send_json(message)
+   ```
 
-### 2. Code-Dokumentation
-- Docstrings (Python)
-- JSDoc (TypeScript)
-- Kommentare
+3. **Hardware Integration**
+   ```python
+   class HardwareManager:
+       def detect_boards(self) -> List[Board]:
+           # Board detection logic
+           pass
 
-## 🔍 Debugging
+       async def update_firmware(self, board: Board, firmware: Path):
+           # Firmware update logic
+           pass
+   ```
 
-### 1. Backend
-```python
-# Logging aktivieren
-logging.basicConfig(level=logging.DEBUG)
+### Frontend
 
-# Debugger
-import pdb; pdb.set_trace()
-```
+1. **Vue Components**
+   - Composition API
+   - TypeScript support
+   - Props validation
+   - Event handling
 
-### 2. Frontend
-```javascript
-// Vue DevTools
-Vue.config.devtools = true
+2. **State Management**
+   ```typescript
+   export const useInstallationStore = defineStore('installation', {
+     state: () => ({
+       status: 'not_started',
+       progress: 0
+     }),
+     actions: {
+       async startInstallation() {
+         // Installation logic
+       }
+     }
+   })
+   ```
 
-// Console Logging
-console.log('Debug:', data)
-```
+3. **Router Guards**
+   ```typescript
+   router.beforeEach(async (to, from) => {
+     const store = useInstallationStore()
+     if (to.meta.requiresBoard && !store.selectedBoard) {
+       return { name: 'select-board' }
+     }
+   })
+   ```
 
-## 🚀 Performance
+## Testing
 
-### 1. Backend
-- Async/Await
-- Connection Pooling
-- Caching
+### Backend Tests
 
-### 2. Frontend
-- Lazy Loading
-- Code Splitting
-- Asset Optimization
+1. **Unit Tests**
+   ```python
+   def test_board_detection():
+       manager = HardwareManager()
+       boards = manager.detect_boards()
+       assert len(boards) > 0
+       assert all(isinstance(b, Board) for b in boards)
+   ```
 
-## 📈 Monitoring
+2. **Integration Tests**
+   ```python
+   async def test_websocket_connection():
+       client = TestClient(app)
+       with client.websocket_connect("/ws") as websocket:
+           data = websocket.receive_json()
+           assert data["type"] == "connection_established"
+   ```
 
-### 1. Logs
-- Application Logs
-- Access Logs
-- Error Logs
+### Frontend Tests
 
-### 2. Metrics
-- Response Times
-- Error Rates
-- Resource Usage
+1. **Component Tests**
+   ```typescript
+   describe('BoardSelector', () => {
+     it('displays available boards', async () => {
+       const wrapper = mount(BoardSelector)
+       await flushPromises()
+       expect(wrapper.findAll('.board-item')).toHaveLength(3)
+     })
+   })
+   ```
 
-## 🔄 CI/CD
+2. **Store Tests**
+   ```typescript
+   describe('installationStore', () => {
+     it('updates installation progress', () => {
+       const store = useInstallationStore()
+       store.updateProgress(50)
+       expect(store.progress).toBe(50)
+     })
+   })
+   ```
 
-### GitHub Actions
-```yaml
-name: CI/CD
+## API Integration
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+1. **API Client**
+   ```typescript
+   class APIClient {
+     async detectBoards(): Promise<Board[]> {
+       const response = await this.client.get('/api/boards/detect')
+       return response.data
+     }
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run Tests
-        run: |
-          pip install -r requirements.txt
-          pytest
+     async startInstallation(config: InstallationConfig): Promise<string> {
+       const response = await this.client.post('/api/install/start', config)
+       return response.data.installation_id
+     }
+   }
+   ```
 
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy
-        run: |
-          # Deployment steps
-```
+2. **WebSocket Integration**
+   ```typescript
+   class WebSocketService {
+     connect(): void {
+       this.ws = new WebSocket(WS_URL)
+       this.ws.onmessage = (event) => {
+         const data = JSON.parse(event.data)
+         this.handleMessage(data)
+       }
+     }
 
-## 📞 Support
+     private handleMessage(data: WebSocketMessage): void {
+       switch (data.type) {
+         case 'installation_progress':
+           this.store.updateProgress(data.progress)
+           break
+       }
+     }
+   }
+   ```
 
-### Community
-- [GitHub Issues](https://github.com/Innovate3D-Labs/InnovateOS-Klipper-installer/issues)
-- [Discord](https://discord.gg/Innovate3D-Labs)
-- [Forum](https://forum.innovate3d-labs.com)
+## Contributing
 
-### Dokumentation
-- [API Docs](https://docs.innovate3d-labs.com/api)
-- [Development Guide](https://docs.innovate3d-labs.com/dev)
-- [Contribution Guide](https://docs.innovate3d-labs.com/contribute)
+1. Follow coding standards:
+   - PEP 8 for Python
+   - Vue Style Guide
+   - TypeScript best practices
+
+2. Document your code:
+   - Function docstrings
+   - Component documentation
+   - API documentation updates
+
+3. Write tests:
+   - Unit tests for new features
+   - Integration tests for API endpoints
+   - E2E tests for critical paths
+
+4. Review process:
+   - Code review by team members
+   - CI/CD pipeline checks
+   - Documentation review
+
+## Resources
+
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [Vue 3 Documentation](https://v3.vuejs.org/)
+- [Pinia Documentation](https://pinia.vuejs.org/)
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)

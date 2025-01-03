@@ -1,0 +1,62 @@
+{
+    "BTT SKR": {
+        "mcu": "stm32f103",
+        "requires_bootloader": true,
+        "flash_method": "dfu",
+        "build_flags": {
+            "BOARD": "generic-stm32f103",
+            "MCU": "stm32f103",
+            "CLOCK_FREQ": "72000000"
+        }
+    },
+    "BTT Octopus": {
+        "mcu": "stm32f446",
+        "requires_bootloader": true,
+        "flash_method": "dfu",
+        "build_flags": {
+            "BOARD": "btt-octopus-f446",
+            "MCU": "stm32f446",
+            "CLOCK_FREQ": "180000000"
+        }
+    },
+    "Arduino Mega": {
+        "mcu": "atmega2560",
+        "requires_bootloader": false,
+        "flash_method": "avrdude",
+        "build_flags": {
+            "BOARD": "arduino-mega2560",
+            "MCU": "atmega2560",
+            "CLOCK_FREQ": "16000000"
+        }
+    },
+    "Arduino Due": {
+        "mcu": "sam3x8e",
+        "requires_bootloader": false,
+        "flash_method": "bossa",
+        "build_flags": {
+            "BOARD": "arduino-due",
+            "MCU": "sam3x8e",
+            "CLOCK_FREQ": "84000000"
+        }
+    },
+    "Einsy Rambo": {
+        "mcu": "atmega2560",
+        "requires_bootloader": false,
+        "flash_method": "avrdude",
+        "build_flags": {
+            "BOARD": "einsy-rambo",
+            "MCU": "atmega2560",
+            "CLOCK_FREQ": "16000000"
+        }
+    },
+    "BTT Spider": {
+        "mcu": "stm32f446",
+        "requires_bootloader": true,
+        "flash_method": "dfu",
+        "build_flags": {
+            "BOARD": "btt-spider",
+            "MCU": "stm32f446",
+            "CLOCK_FREQ": "180000000"
+        }
+    }
+}

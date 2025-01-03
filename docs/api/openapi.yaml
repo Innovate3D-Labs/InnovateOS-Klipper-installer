@@ -1,0 +1,257 @@
+openapi: 3.0.0
+info:
+  title: InnovateOS Klipper Installer API
+  version: 1.0.0
+  description: |
+    API for the InnovateOS Klipper Installer, providing endpoints for board management,
+    configuration, and installation of Klipper firmware.
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.innovateos.dev
+    description: Production server
+
+tags:
+  - name: boards
+    description: Board detection and management
+  - name: config
+    description: Printer configuration
+  - name: installation
+    description: Firmware installation
+  - name: system
+    description: System information and status
+
+paths:
+  /api/boards/detect:
+    get:
+      summary: Detect connected boards
+      tags: [boards]
+      responses:
+        '200':
+          description: List of detected boards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Board'
+        '500':
+          $ref: '#/components/responses/Error500'
+
+  /api/boards/types:
+    get:
+      summary: Get supported board types
+      tags: [boards]
+      responses:
+        '200':
+          description: List of supported board types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BoardType'
+
+  /api/boards/test-connection:
+    post:
+      summary: Test board connection
+      tags: [boards]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoardConnection'
+      responses:
+        '200':
+          description: Connection test result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  /api/config/validate:
+    post:
+      summary: Validate printer configuration
+      tags: [config]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrinterConfig'
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResult'
+
+  /api/config/save:
+    post:
+      summary: Save printer configuration
+      tags: [config]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrinterConfig'
+      responses:
+        '200':
+          description: Configuration saved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigSaveResponse'
+
+  /api/install/start:
+    post:
+      summary: Start firmware installation
+      tags: [installation]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstallationRequest'
+      responses:
+        '200':
+          description: Installation started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstallationResponse'
+
+  /api/install/status/{installation_id}:
+    get:
+      summary: Get installation status
+      tags: [installation]
+      parameters:
+        - name: installation_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current installation status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstallationStatus'
+
+components:
+  schemas:
+    Board:
+      type: object
+      properties:
+        port:
+          type: string
+          example: /dev/ttyUSB0
+        name:
+          type: string
+          example: SKR V1.4
+        types:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoardType'
+        vid:
+          type: string
+          example: "0x1D50"
+        pid:
+          type: string
+          example: "0x6029"
+        serial_number:
+          type: string
+        description:
+          type: string
+
+    BoardType:
+      type: string
+      enum:
+        - arduino_mega
+        - arduino_due
+        - stm32_skr
+        - ramps
+        - einsy
+        - octopus
+        - spider
+
+    PrinterConfig:
+      type: object
+      required:
+        - printer_name
+        - kinematics
+        - bed_size
+        - board_type
+        - mcu_path
+      properties:
+        printer_name:
+          type: string
+        kinematics:
+          type: string
+          enum: [cartesian, delta, corexy]
+        bed_size:
+          type: object
+          properties:
+            x: 
+              type: number
+            y:
+              type: number
+            z:
+              type: number
+        max_velocity:
+          type: number
+        max_accel:
+          type: number
+        board_type:
+          type: string
+        mcu_path:
+          type: string
+        features:
+          type: object
+          properties:
+            pressure_advance:
+              type: boolean
+            input_shaping:
+              type: boolean
+
+    InstallationStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [not_started, downloading, building, flashing, completed, failed]
+        message:
+          type: string
+        progress:
+          type: number
+        error:
+          type: string
+
+  responses:
+    Error500:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              details:
+                type: object
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
